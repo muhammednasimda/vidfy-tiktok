@@ -3,21 +3,34 @@ const puppeteer = require("puppeteer");
 
 const app = express();
 
-const url = "https://www.imdb.com/title/tt10919240/";
+const url = "https://www.tiktok.com/@paulsudres/video/6964064641014074630";
 app.get("/", async (req, res) => {
-  let browser = await puppeteer.launch({ args: ["--no-sandbox"] });
-  let page = await browser.newPage();
-  await page.goto(url, { waitUntil: "domcontentloaded" });
-  await page.setRequestInterception(true);
-  page.on("request", (request) => {
-    if (request.resourceType() === "image") request.abort();
-    else request.continue();
+  let browser = await puppeteer.launch({
+    args: ["--no-sandbox"],
+    headless: false,
   });
+  let page = await browser.newPage();
+  await page.setRequestInterception(true);
+  page.on("request", (req) => {
+    if (
+      req.resourceType() == "stylesheet" ||
+      req.resourceType() == "font" ||
+      req.resourceType() == "image"
+    ) {
+      req.abort();
+    } else {
+      req.continue();
+    }
+  });
+  await page.goto(url, { waitUntil: "domcontentloaded" });
+
   let data = await page.evaluate(() => {
-    let title = document.querySelector(
-      "#__next > main > div > section.ipc-page-background.ipc-page-background--base.TitlePage__StyledPageBackground-wzlr49-0.dDUGgO > section > div:nth-child(4) > section > section > div.TitleBlock__Container-sc-1nlhx7j-0.hglRHk > div.TitleBlock__TitleContainer-sc-1nlhx7j-1.jxsVNt > h1"
-    ).innerText;
-    return { title };
+    let snippet = document.querySelector(
+      "#main > div.jsx-2773227880.main-body.page-with-header.middle.em-follow > div.jsx-523345860.video-detail.video-detail-v4.middle > div > div > main > div > div.jsx-3148321798.video-card-big.browse-mode > div.jsx-3148321798.video-card-container > div.jsx-1283372866.video-card-browse"
+    );
+    let cover = snippet.split('background-image: url("')[1].split('");">')[0];
+    let video = snippet.split('src="')[1].split('" preload="metadata"')[0];
+    return { video, cover };
   });
   res.json(data);
 });

@@ -5,7 +5,7 @@ const app = express();
 
 const url = "https://www.imdb.com/title/tt10919240/";
 app.get("/", async (req, res) => {
-  let browser = await puppeteer.launch();
+  let browser = await puppeteer.launch({ args: ["--no-sandbox"] });
   let page = await browser.newPage();
   await page.goto(url, { waitUntil: "networkidle2" });
   let data = await page.evaluate(() => {
